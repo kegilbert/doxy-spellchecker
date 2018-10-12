@@ -2,7 +2,7 @@
  *  This is a testyboi.
  */
 class Test {
-
+    int a;
 };
 
 /**
