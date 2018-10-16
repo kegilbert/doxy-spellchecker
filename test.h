@@ -1,16 +1,26 @@
 /**
- *  This is a testyboi.
+ *  This is a testyboi. C<A()>
  */
 class Test {
     int a;
 };
 
 /**
- *  Another class is defined here.
+ *  Another class is defined here. It is called Testor.
+ *  Testor is not a word now is it.
  *
  *  Check it out.
+ *  @code
+ *      Testor temp();
+ *      temp.sub_test(5);
+ *  @endcode
  */
-class Test2 {
+class Testor {
+    /**
+     *  Constructor
+     */
+    Testor() { } 
+
     /**
      *  This is a test method
      *
@@ -19,3 +29,27 @@ class Test2 {
      */
     int sub_test(int x);
 };
+
+/**
+ *  NotI2C class
+ */
+class NotI2C {
+
+};
+
+/**
+ *  Callback<A()>
+ */
+template<typename R, typename A0>
+class Callback<R(A0)> {
+
+};
+
+/**
+ *  Abcdef<R(int)>
+ */
+template<typename R, typename A0>
+class Abcdef<R(int)> {
+
+};
+
