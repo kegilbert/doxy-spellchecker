@@ -1,7 +1,5 @@
 #!/bin/bash
 
-num_to_str_map=("zero" "one" "two" "three" "four" "five" "six" "seven" "eight" "nine")
-
 find "$1" -name '*.h' | while read line; do
     echo "$line"
     res=$(sed -n '\/\*\*/,/\*\// p' "$line")
@@ -38,6 +36,23 @@ find "$1" -name '*.h' | while read line; do
                     ""
                )
 
+    # Stripping strings between tokens P1-P2 and P3-P4 inclusively ran into issues depending
+    # on if the tokens were on the same line or not.
+    #_________________________________________
+    # Don't remove this P1 remove me P2
+    # Keep me
+    # P3
+    #   Remove me too please
+    # P4
+    # Keep me too
+    # Still here P1 But this shouldn't be P2
+    #_________________________________________
+    #
+    # Opted for having two separate formats. In particular this formatting issue came up when
+    # trying to strip the code segments and template type arguments between '<, >' as the multiline
+    # sed command would strip the entire line, causing the removal string to span across the entire file
+    # when trying to match the next end token (above format when stripping everything between P1 and P2
+    # would end up with just "Don't remove this" and the rest of the file stripped).
     formats=(   'strip_between'
                 'strip_between'
                 'strip_between_sameline'
