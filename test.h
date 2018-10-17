@@ -17,6 +17,10 @@ class Test {
  */
 class Testor {
     /**
+     *  baddabing should not show up because it's referenced in the code
+     */
+    int baddabing;
+    /**
      *  Constructor
      */
     Testor() { } 
