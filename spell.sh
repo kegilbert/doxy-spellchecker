@@ -2,7 +2,7 @@
 
 find "$1" -name '*.h' | while read file; do
     echo "$file"
-    res=$(sed -n '\/\*\*/,/\*\// p' "$file")
+    res=$(sed -n '\/\*\*/,/\*\// p' "$file" | cut -d '/' -f2)
 
     echo "Classes: "
 
@@ -16,9 +16,11 @@ find "$1" -name '*.h' | while read file; do
 
         grep $class ~/.aspell.en.pws > /dev/null
         if [ $? -ne 0 ]; then
-            echo $class >> ~/.aspell.en.pws
+            echo $class >> ignore.en.pws
         fi
     done
+
+    echo "+++++++++++++++"
 
     start_tokens=(  "/@code"
                     "/addtogroup"
@@ -30,7 +32,7 @@ find "$1" -name '*.h' | while read file; do
                  )
 
     end_tokens=(    "/@endcode"
-                    "/\*\/"
+                    "/\*"
                     ""
                     ">"
                     ""
@@ -100,13 +102,23 @@ find "$1" -name '*.h' | while read file; do
     echo "Errors: "
 
     prev_err=()
-    echo "$res" | aspell list -C | while read err; do
+    echo "$res" | aspell list -C -p ./ignore.en.pws | while read err; do
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
-            if ! [[ ${prev_err[*]} =~ "$err" ]]; then
-                prev_err+="$err"
-                grep -n "$err" "$file" | cut -d ' ' -f1 | while read ln; do
-                    echo "$ln $err"
-                done
+            # Do not count all caps words as errors (RTOS, WTI, etc)
+            if ! [[ $err =~ ^[A-Z]+$ ]]; then
+    
+                # Disregard camelcase/underscored words
+                echo "$err" | grep -E '[a-z]{1,}[A-Z]|_' > /dev/null
+                if [ $? -ne 0 ]; then
+                    # The grep command to fetch the line numbers will report all instances, do not
+                    # list repeated error words found from aspell in each file
+                    if ! [[ ${prev_err[*]} =~ "$err" ]]; then
+                        prev_err+="$err"
+                        grep -n "$err" "$file" | cut -d ' ' -f1 | while read ln; do
+                            echo "$ln $err"
+                        done
+                    fi
+                fi
             fi
         fi
     done
