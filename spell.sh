@@ -96,18 +96,18 @@ find "$1" -name '*.h' | while read file; do
         echo "$res"
     fi
 
-    #echo "================================="
-    #echo "Errors: "
-    #echo "$res" | aspell list -C
-    #echo "_________________________________"
-
     echo "================================="
     echo "Errors: "
+
+    prev_err=()
     echo "$res" | aspell list -C | while read err; do
-        #echo "$res" | grep "$err" | wc -l
-        #grep "$err" "$file" | wc -l
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
-            echo "$err"
+            if ! [[ ${prev_err[*]} =~ "$err" ]]; then
+                prev_err+="$err"
+                grep -n "$err" "$file" | cut -d ' ' -f1 | while read ln; do
+                    echo "$ln $err"
+                done
+            fi
         fi
     done
     echo "_________________________________"
