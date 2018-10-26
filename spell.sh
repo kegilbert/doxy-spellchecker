@@ -1,5 +1,7 @@
 #!/bin/bash
 
+total_err=0
+
 find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read file; do
     echo "$file"
     res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/[0-9]*//g')
@@ -111,8 +113,8 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     prev_err=()
     echo "$res" | aspell list -C -p ./ignore.en.pws --local-data-dir . | while read err; do
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
-            # Do not count all caps words as errors (RTOS, WTI, etc)
-            if ! [[ $err =~ ^[A-Z]+$ ]]; then
+            # Do not count all caps words as errors (RTOS, WTI, etc) or plural versions (APNs)
+            if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ ]]; then
 
                 # Disregard camelcase/underscored words or hex values
                 echo "$err" | grep -E '[a-z]{1,}[A-Z]|_|0x' > /dev/null
@@ -123,6 +125,7 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
                         prev_err+="$err"
                         grep -nw "$err" "$file" | cut -d ' ' -f1 | while read ln; do
                             echo "$ln $err"
+                            let "total_err++"
                         done
                     fi
                 fi
@@ -130,5 +133,7 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
         fi
     done
     echo "_________________________________"
-
 done
+
+echo "Total Errors Found: $total_err"
+

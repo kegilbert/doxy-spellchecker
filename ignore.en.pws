@@ -1,10 +1,23 @@
 personal_ws-1.1 en 60 utf-8
+_code_
 mbed
 rtos
 malloc
 mutex
 tx
 rx
+wifi
+wi
+fi
+rr
+sd
+XORed
+unbuffered
+memcpy
+nack
+mbit
+retval
+dequeue
 assertation
 destructor
 constructor
@@ -26,6 +39,9 @@ pointee
 entrancy
 Systick
 noop
+deassert
+deasserts
+deasserted
 getter
 setter
 preallocated
@@ -40,8 +56,10 @@ enum
 endian
 emac
 emacs
-APIs
 json
+_doxy_
+sa
+_classes_
 DirHandle
 FileLike
 FileBase
