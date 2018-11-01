@@ -77,6 +77,8 @@ emacs
 json
 _doxy_
 sa
+tparam
+param
 _classes_
 DirHandle
 FileLike

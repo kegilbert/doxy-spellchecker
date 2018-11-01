@@ -1,7 +1,5 @@
 #!/bin/bash
 
-total_err=0
-
 find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read file; do
     echo "$file"
     res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/[0-9]*//g')
@@ -36,8 +34,6 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
                     "defgroup"
                     "<"
                     "()"
-                    "\@tparam"
-                    "\@param"
                  )
 
     end_tokens=(    "/@endcode"
@@ -45,16 +41,12 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
                     ""
                     ">"
                     ""
-                    ""
-                    ""
                )
 
     formats=(   'strip_between'
                 'strip_between'
                 'strip_line'
                 'strip_between_sameline'
-                'strip_token'
-                'strip_token'
                 'strip_token'
             )
 
@@ -134,6 +126,3 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     done
     echo "_________________________________"
 done
-
-echo "Total Errors Found: $total_err"
-
