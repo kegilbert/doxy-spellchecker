@@ -14,7 +14,10 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     #   - class Test : Inherit...
     #   - class Test:Inhereit...
     #   - class Test<....>
-    cat "$file" | grep ^class | cut -d ' ' -f2 | cut -d ':' -f1 | cut -d ';' -f1 | cut -d '<' -f1 | sed 's/[0-9]*//g' | while read class; do
+    cat "$file" | grep ^class |                                         \
+    cut -d ' ' -f2 |cut -d ':' -f1 | cut -d ';' -f1 | cut -d '<' -f1 |  \
+    sed 's/[0-9]*//g' | while read class; do
+
         if [[ $2 == -v*  ]]; then
             echo "$class"
         fi
