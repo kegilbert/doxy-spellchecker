@@ -108,8 +108,8 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     prev_err=()
     echo "$res" | aspell list -C -p ./ignore.en.pws --local-data-dir . | while read err; do
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
-            # Do not count all caps words as errors (RTOS, WTI, etc) or plural versions (APNs)
-            if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ ]]; then
+            # Do not count all caps words as errors (RTOS, WTI, etc) or plural versions (APNs/MTD's)
+            if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ || $err =~ ^[A-Z]+\'s$ ]]; then
 
                 # Disregard camelcase/underscored words or hex values
                 echo "$err" | grep -E '[a-z]{1,}[A-Z]|_|0x' > /dev/null
