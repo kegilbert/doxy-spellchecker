@@ -1,10 +1,11 @@
 #!/bin/bash
+set -euo pipefail
 
 find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read file; do
     echo "$file"
     res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/[0-9]*//g')
 
-    if [[ $2 == -v*  ]]; then
+    if [[ ${2:-} == -v*  ]]; then
         echo "Classes: "
     fi
 
@@ -18,17 +19,16 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     cut -d ' ' -f2 |cut -d ':' -f1 | cut -d ';' -f1 | cut -d '<' -f1 |  \
     sed 's/[0-9]*//g' | while read class; do
 
-        if [[ $2 == -v*  ]]; then
+        if [[ ${2:-} == -v*  ]]; then
             echo "$class"
         fi
 
-        grep $class ignore.en.pws > /dev/null
-        if [ $? -ne 0 ]; then
+        if grep --quiet $class ignore.en.pws; then
             echo $class >> ignore.en.pws
         fi
     done
 
-    if [[ $2 == -v*  ]]; then
+    if [[ ${2:-} == -v*  ]]; then
         echo "+++++++++++++++"
     fi
 
@@ -98,7 +98,7 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
         fi
     done
 
-    if [ "$2" == "-vv" ]; then
+    if [ "${2:-}" == "-vv" ]; then
         echo "$res"
     fi
 
@@ -112,15 +112,13 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
             if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ || $err =~ ^[A-Z]+\'s$ ]]; then
 
                 # Disregard camelcase/underscored words or hex values
-                echo "$err" | grep -E '[a-z]{1,}[A-Z]|_|0x' > /dev/null
-                if [ $? -ne 0 ]; then
+                if ! echo "$err" | grep --quiet -E '[a-z]{1,}[A-Z]|_|0x'; then
                     # The grep command to fetch the line numbers will report all instances, do not
                     # list repeated error words found from aspell in each file
                     if ! [[ ${prev_err[*]} =~ "$err" ]]; then
                         prev_err+="$err"
                         grep -nw "$err" "$file" | cut -d ' ' -f1 | while read ln; do
                             echo "$ln $err"
-                            let "total_err++"
                         done
                     fi
                 fi
