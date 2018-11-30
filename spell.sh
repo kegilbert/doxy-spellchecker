@@ -3,7 +3,7 @@ set -euo pipefail
 
 find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read file; do
     echo "$file"
-    res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/[0-9]*//g')
+    res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/0x[^ ]*//' | sed 's/[0-9]*//g')
 
     if [[ ${2:-} == -v*  ]]; then
         echo "Classes: "
@@ -114,13 +114,14 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
             # Do not count all caps words as errors (RTOS, WTI, etc) or plural versions (APNs/MTD's)
             if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ || $err =~ ^[A-Z]+\'s$ ]]; then
 
-                # Disregard camelcase/underscored words or hex values
-                if ! echo "$err" | grep --quiet -E '[a-z]{1,}[A-Z]|_|0x'; then
+                # Disregard camelcase/underscored words. Hex was stripped at the beginning
+                if ! echo "$err" | grep --quiet -E '[a-z]{1,}[A-Z]|_'; then
+
                     # The grep command to fetch the line numbers will report all instances, do not
                     # list repeated error words found from aspell in each file
                     if ! [[ ${prev_err[*]} =~ "$err" ]]; then
                         prev_err+="$err"
-                        grep -nw "$err" "$file" | cut -d ' ' -f1 | while read ln; do
+                        grep -n "$err" "$file" | cut -d ' ' -f1 | while read ln; do
                             echo "$ln $err"
                         done
                     fi
