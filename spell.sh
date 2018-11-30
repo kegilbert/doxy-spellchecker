@@ -15,18 +15,21 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     #   - class Test : Inherit...
     #   - class Test:Inhereit...
     #   - class Test<....>
-    cat "$file" | grep ^class |                                         \
-    cut -d ' ' -f2 |cut -d ':' -f1 | cut -d ';' -f1 | cut -d '<' -f1 |  \
-    sed 's/[0-9]*//g' | while read class; do
 
-        if [[ ${2:-} == -v*  ]]; then
-            echo "$class"
-        fi
+    if grep --quiet "^class" "$file"; then
+        cat "$file" | grep ^class |                                         \
+        cut -d ' ' -f2 |cut -d ':' -f1 | cut -d ';' -f1 | cut -d '<' -f1 |  \
+        sed 's/[0-9]*//g' | while read class; do
 
-        if grep --quiet $class ignore.en.pws; then
-            echo $class >> ignore.en.pws
-        fi
-    done
+            if [[ ${2:-} == -v*  ]]; then
+                echo "$class"
+            fi
+
+            if grep --quiet $class ignore.en.pws; then
+                echo $class >> ignore.en.pws
+            fi
+        done
+    fi
 
     if [[ ${2:-} == -v*  ]]; then
         echo "+++++++++++++++"
