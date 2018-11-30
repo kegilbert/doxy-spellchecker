@@ -11,6 +11,7 @@ fi
 rr
 sd
 pc
+vtable
 nmemb
 relloc
 printf
@@ -1271,3 +1272,6 @@ OdinWiFiEMAC
 TCPSocket
 DNS
 TLSSocketWrapper
+ScopedRomWriteLock
+CThunkBase
+ScopedRamExecutionLock
