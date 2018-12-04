@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
 find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read file; do
     echo "$file"
     res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/0x[^ ]*//' | sed 's/[0-9]*//g')
@@ -25,8 +27,8 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
                 echo "$class"
             fi
 
-            if ! grep --quiet $class ignore.en.pws; then
-                echo $class >> ignore.en.pws
+            if ! grep --quiet $class "$DIR"/ignore.en.pws; then
+                echo $class >> "$DIR"/ignore.en.pws
             fi
         done
     fi
@@ -109,7 +111,7 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     echo "Errors: "
 
     prev_err=()
-    echo "$res" | aspell list -C --ignore-case -p ./ignore.en.pws --local-data-dir . | while read err; do
+    echo "$res" | aspell list -C --ignore-case -p "$DIR"/ignore.en.pws --local-data-dir "$DIR" | while read err; do
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
             # Do not count all caps words as errors (RTOS, WTI, etc) or plural versions (APNs/MTD's)
             if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ || $err =~ ^[A-Z]+\'s$ ]]; then
