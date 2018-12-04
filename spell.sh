@@ -2,8 +2,11 @@
 set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+ERRORS=0
 
-find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read file; do
+# Loops use here strings to allow them to run in the main shell and modify the correct version of
+# the error counter global variable
+while read file; do
     echo "$file"
     res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/0x[^ ]*//' | sed 's/[0-9]*//g')
 
@@ -110,8 +113,8 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
     echo "================================="
     echo "Errors: "
 
-    prev_err=()
-    echo "$res" | aspell list -C --ignore-case -p "$DIR"/ignore.en.pws --local-data-dir "$DIR" | while read err; do
+    prev_err=("")
+    while read err; do
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
             # Do not count all caps words as errors (RTOS, WTI, etc) or plural versions (APNs/MTD's)
             if ! [[ $err =~ ^[A-Z]+$ || $err =~ ^[A-Z]+s$ || $err =~ ^[A-Z]+\'s$ ]]; then
@@ -123,13 +126,18 @@ find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print | while read fi
                     # list repeated error words found from aspell in each file
                     if ! [[ ${prev_err[*]} =~ "$err" ]]; then
                         prev_err+="$err"
-                        grep -n "$err" "$file" | cut -d ' ' -f1 | while read ln; do
+                        while read ln; do
                             echo "$ln $err"
-                        done
+                            ERRORS=$((ERRORS + 1))
+                        done <<< "$(grep -n "$err" "$file" | cut -d ' ' -f1)"
                     fi
                 fi
             fi
         fi
-    done
+    done <<< "$(echo "$res" | aspell list -C --ignore-case -p "$DIR"/ignore.en.pws --local-data-dir "$DIR")"
+
     echo "_________________________________"
-done
+done <<< "$(find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print)"
+
+echo "Total Errors Found: $ERRORS"
+exit $ERRORS
