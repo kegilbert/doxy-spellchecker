@@ -110,9 +110,6 @@ while read file; do
         echo "$res"
     fi
 
-    echo "================================="
-    echo "Errors: "
-
     prev_err=("")
     while read err; do
         if [ $(echo "$res" | grep "$err" | wc -l) -eq $(grep "$err" "$file" | wc -l) ]; then
@@ -125,7 +122,13 @@ while read file; do
                     # The grep command to fetch the line numbers will report all instances, do not
                     # list repeated error words found from aspell in each file
                     if ! [[ ${prev_err[*]} =~ "$err" ]]; then
-                        prev_err+="$err"
+                        prev_err+=("$err")
+
+                        if [ ${#prev_err[@]} -eq 2 ]; then
+                            echo "================================="
+                            echo "Errors: "
+                        fi
+
                         while read ln; do
                             echo "$ln $err"
                             ERRORS=$((ERRORS + 1))
@@ -136,8 +139,16 @@ while read file; do
         fi
     done <<< "$(echo "$res" | aspell list -C --ignore-case -p "$DIR"/ignore.en.pws --local-data-dir "$DIR")"
 
-    echo "_________________________________"
+    if [ ${#prev_err[@]} -ne 1 ]; then
+        echo "_________________________________"
+    fi
+
 done <<< "$(find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print)"
 
 echo "Total Errors Found: $ERRORS"
-exit $ERRORS
+
+if [ $ERRORS -ne 0 ]; then
+    exit 1
+else
+    exit 0
+fi
