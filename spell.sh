@@ -10,36 +10,6 @@ while read file; do
     echo "$file"
     res=$(awk '/\/\*\*/,/\*\//' "$file" | cut -d '/' -f2 | sed 's/0x[^ ]*//' | sed 's/[0-9]*//g')
 
-    if [[ ${2:-} == -v*  ]]; then
-        echo "Classes: "
-    fi
-
-    # Handle variable class defition syntax:
-    #   - class Test;
-    #   - class Test {....
-    #   - class Test : Inherit...
-    #   - class Test:Inhereit...
-    #   - class Test<....>
-
-    if grep --quiet "^class" "$file"; then
-        cat "$file" | grep ^class |                                         \
-        cut -d ' ' -f2 |cut -d ':' -f1 | cut -d ';' -f1 | cut -d '<' -f1 |  \
-        sed 's/[0-9]*//g' | while read class; do
-
-            if [[ ${2:-} == -v*  ]]; then
-                echo "$class"
-            fi
-
-            if ! grep --quiet $class "$DIR"/ignore.en.pws; then
-                echo $class >> "$DIR"/ignore.en.pws
-            fi
-        done
-    fi
-
-    if [[ ${2:-} == -v*  ]]; then
-        echo "+++++++++++++++"
-    fi
-
     start_tokens=(  "/@code"
                     "/addtogroup"
                     "defgroup"
@@ -80,29 +50,19 @@ while read file; do
     # would end up with just "Don't remove this" and the rest of the file stripped).
 
     for ((i=0;i<${#start_tokens[@]};++i)); do
+        filter=""
         if [[ "${formats[i]}" == 'strip_between' ]]; then
             filter=$(echo "$res" | sed ""${start_tokens[i]}"/,"${end_tokens[i]}"/d")
-
-            if [ "$filter" != "" ]; then
-                res=$filter
-            fi
         elif [[ "${formats[i]}" == 'strip_between_sameline' ]]; then
             filter=$(echo "$res" | sed -e "s/"${start_tokens[i]}".*"${end_tokens[i]}"//")
-
-            if [ "$filter" != "" ]; then
-                res=$filter
-            fi
         elif [[ "${formats[i]}" == 'strip_line' ]]; then
             filter=$(echo "$res" | sed "/"${start_tokens[i]}"/ d")
-
-            if [ "$filter" != "" ]; then
-                res=$filter
-            fi
         elif [[ "${formats[i]}" == 'strip_token' ]]; then
             filter=$(echo "$res" | sed "s/"${start_tokens[i]}"//g")
-            if [ "$filter" != "" ]; then
-                res=$filter
-            fi
+        fi
+
+        if [ "$filter" != "" ]; then
+            res=$filter
         fi
     done
 
@@ -145,9 +105,12 @@ while read file; do
 
 done <<< "$(find "$1" -type d -iname "*target*" -prune -o -name '*.h' -print)"
 
+echo "----------------------------------------------------------------------------------"
 echo "Total Errors Found: $ERRORS"
 
 if [ $ERRORS -ne 0 ]; then
+    echo "If any of the failed words should be considered valid please add them to the ignore.en.pws file"\
+         "found in tools/test/scripts/doxy-spellchecker between the _code_ and _doxy_ tags."
     exit 1
 else
     exit 0
